@@ -73,26 +73,9 @@ footer a{color:#ff8095}
   <h2>Kya dekhna chahte ho?</h2>
   <p class="sub">Apna topic ya idea suggest karo - suggestion seedha Prashant tak pahunchta hai.</p>
   <div class="card">
-    <form id="sform" action="https://docs.google.com/forms/d/e/1FAIpQLSfpoixm1c-HXGuOzl_xB3IhkXip_pTNUdDfMtxdMe_F3WCWMg/formResponse" method="POST" target="hidden_iframe">
-      <label class="f" for="fname">Aapka naam (optional)</label>
-      <input type="text" id="fname" name="entry.1191466046" placeholder="Naam likho ya khaali chhodo">
-      <label class="f">Kaunsi category ka content chahiye? *</label>
-      <div class="chips">
-      <label><input type="radio" name="entry.1589408978" value="Cyber Safety & Fraud Awareness" required><span>Cyber Safety & Fraud Awareness</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Indian Laws & Kanoon" required><span>Indian Laws & Kanoon</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Career After 12th & Education" required><span>Career After 12th & Education</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Salary & Corporate Life" required><span>Salary & Corporate Life</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Apps & Tech Tools" required><span>Apps & Tech Tools</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Personal Growth & Mindset" required><span>Personal Growth & Mindset</span></label>
-      <label><input type="radio" name="entry.1589408978" value="Real Stories (True Incidents)" required><span>Real Stories (True Incidents)</span></label>
-      <label><input type="radio" name="entry.1589408978" value="AI & Fun Videos" required><span>AI & Fun Videos</span></label>
-        <label><input type="radio" name="entry.1589408978" value="__other_option__" required><span>Other</span></label>
-      </div>
-      <input type="text" id="othertext" name="entry.1589408978.other_option_response" placeholder="Other - apni category likho" style="margin-top:10px;display:none">
-      <label class="f" for="fdet">Kaunsa topic / idea chahiye? Thoda detail mein likho</label>
-      <textarea id="fdet" name="entry.1946981362" placeholder="Jaise: UPI fraud se kaise bachein, ya 12th ke baad konsa course..."></textarea>
-      <button class="submit" type="submit">Suggestion bhejo</button>
-    </form>
+    <div class="fembed">
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfpoixm1c-HXGuOzl_xB3IhkXip_pTNUdDfMtxdMe_F3WCWMg/viewform?embedded=true" width="100%" height="620" frameborder="0" marginheight="0" marginwidth="0" style="border:1px solid #2a2a3a;border-radius:12px;background:#fff" title="DevSpace suggestion form">Loading...</iframe>
+    </div>
     <div class="thanks" id="thanks">
       <h3>Shukriya!</h3>
       <p>Aapka suggestion Prashant tak pahunch gaya. Naya video jaldi!</p>
@@ -150,19 +133,7 @@ footer a{color:#ff8095}
   <p><a href="https://www.youtube.com/@devspace786" target="_blank" rel="noopener">YouTube @devspace786</a> &middot; <a href="https://www.instagram.com/devspace786" target="_blank" rel="noopener">Instagram @devspace786</a></p>
   <p style="margin-top:8px">Suggestions seedha Prashant ke paas jaate hain (Google Form). Koi data kisi aur ke saath share nahi hota.</p>
 </footer>
-<iframe name="hidden_iframe" id="hidden_iframe" style="display:none"></iframe>
 <script>
-var form=document.getElementById('sform'),thanks=document.getElementById('thanks'),
-    iframe=document.getElementById('hidden_iframe'),other=document.getElementById('othertext');
-form.addEventListener('change',function(e){
-  if(e.target.name==='entry.1589408978'){
-    other.style.display=(e.target.value==='__other_option__')?'block':'none';
-    if(e.target.value==='__other_option__')other.required=true;else other.required=false;
-  }
-});
-form.addEventListener('submit',function(){
-  setTimeout(function(){form.style.display='none';thanks.style.display='block';},800);
-});
 document.querySelectorAll('.plcard').forEach(function(card){
   card.querySelector('.plhead').addEventListener('click',function(){
     var body=card.querySelector('.plbody');
@@ -173,4 +144,4 @@ document.querySelectorAll('.plcard').forEach(function(card){
 });
 </script>
 </body>
-    </html>
+</html>
