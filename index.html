@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DevSpace with Prashant - Videos & Suggestions</title>
-<meta name="description" content="DevSpace with Prashant - useful ideas, explained in simple Hinglish. Videos dekho, apna topic suggest karo.">
+<meta name="description" content="DevSpace with Prashant - useful ideas, explained in simple Hinglish. Watch videos, suggest your topic.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="DevSpace with Prashant">
-<meta property="og:description" content="Tech help, cyber safety aur useful apps - simple Hinglish me. Videos dekho, playlists kholo, apna topic suggest karo.">
+<meta property="og:description" content="Tech help, cyber safety and useful apps - in simple Hinglish. Watch videos, open playlists, suggest your topic.">
 <meta property="og:url" content="https://legendcyber28.github.io/devspace-with-prashant/">
 <meta property="og:image" content="https://legendcyber28.github.io/devspace-with-prashant/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -69,7 +69,7 @@ footer a{color:#ff8095}
     <a class="btn ghost" href="https://www.instagram.com/devspace786" target="_blank" rel="noopener">Instagram @devspace786</a>
     <a class="btn ghost" href="https://script.google.com/macros/s/AKfycbwehizyZd0oF9nqwQ2DlCZBLwwfzxy5qUPR-Wgw105sc9RfeCqBZr05AAOgp_dYwLAH/exec" rel="noopener">Admin Login (owner)</a>
   </div>
-  <p class="admnote">Admin Login: owner-only private dashboard - Google sign-in maangega.</p>
+  <p class="admnote">Admin Login: owner-only private dashboard - Google sign-in required.</p>
 </header>
 <div class="wrap">
 <!-- Native suggestion form: replaces the Google Form <iframe> block in index.html.
@@ -77,27 +77,27 @@ footer a{color:#ff8095}
      (fetch/XHR cannot read Apps Script responses - no CORS headers).
      Set ENDPOINT to the public doPost /exec URL after deployment approval. -->
 <section id="suggest">
-  <h2>Kya dekhna chahte ho?</h2>
-  <p class="sub">Apna topic ya idea suggest karo - suggestion seedha Prashant tak pahunchta hai.</p>
+  <h2>What do you want to watch?</h2>
+  <p class="sub">Suggest your topic or idea - it goes straight to Prashant.</p>
   <div class="card">
     <form id="suggestForm" method="POST" action="" target="suggestFrame" style="padding:18px">
       <input type="hidden" name="ui" value="1">
       <input type="text" name="website" tabindex="-1" autocomplete="off"
              style="position:absolute;left:-9999px" aria-hidden="true">
-      <input type="text" name="name" maxlength="80" placeholder="Aapka naam (optional)"
+      <input type="text" name="name" maxlength="80" placeholder="Your name (optional)"
              style="width:100%;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem">
       <div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
-      <input type="text" name="category" id="catField" maxlength="40" placeholder="Ya apni category likho"
+      <input type="text" name="category" id="catField" maxlength="40" placeholder="Or type your own category"
              style="width:100%;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem">
-      <textarea name="topic" maxlength="300" required placeholder="Kaunsa topic / idea chahiye?"
+      <textarea name="topic" maxlength="300" required placeholder="Which topic or idea do you want?"
              style="width:100%;min-height:90px;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:12px;font-size:.95rem;resize:vertical"></textarea>
       <p id="formMsg" style="color:#f4a261;font-size:.82rem;display:none;margin-bottom:8px"></p>
-      <button type="submit" id="sendBtn" class="btn red" style="width:100%;border:0;cursor:pointer;font-size:1rem">Bhejo</button>
+      <button type="submit" id="sendBtn" class="btn red" style="width:100%;border:0;cursor:pointer;font-size:1rem">Send</button>
     </form>
     <iframe name="suggestFrame" style="display:none" title="suggest"></iframe>
     <div class="thanks" id="thanks">
-      <h3>Shukriya!</h3>
-      <p>Aapka suggestion Prashant tak pahunch gaya. Naya video jaldi!</p>
+      <h3>Thank you!</h3>
+      <p>Your suggestion has reached Prashant. New video soon!</p>
     </div>
   </div>
 </section>
@@ -135,7 +135,7 @@ footer a{color:#ff8095}
       form.style.display='none';
       document.getElementById('thanks').style.display='block';
     } else {
-      msg.textContent = 'Server thoda busy hai. 1 minute baad dobara bhejo - aapka text yahin hai.';
+      msg.textContent = 'Server is a bit busy. Send again in 1 minute - your text is still here.';
       msg.style.display = 'block';
       document.getElementById('sendBtn').disabled = false;
     }
@@ -149,7 +149,7 @@ footer a{color:#ff8095}
     if(!form.topic.value.trim() || !cat.value.trim()){
       suggestNonce = null;
       ev.preventDefault();
-      msg.textContent = 'Category choose karo aur topic likho.';
+      msg.textContent = 'Choose a category and write a topic.';
       msg.style.display = 'block';
       return;
     }
@@ -161,7 +161,7 @@ footer a{color:#ff8095}
 
 <section id="videos">
   <h2>Playlists</h2>
-  <p class="sub">65+ videos, topic-wise. Playlist kholo aur yahin dekho.</p>
+  <p class="sub">65+ videos, by topic. Open a playlist and watch right here.</p>
   <div class="grid">
     <div class="plcard" data-list="PLcNnErxeLk5I">
       <button class="plhead" type="button"><span class="ic">&#9654;</span><span class="t">Cyber Safe in 30 Seconds</span><span class="hint">Play &#9654;</span></button>
@@ -208,7 +208,7 @@ footer a{color:#ff8095}
 </div>
 <footer>
   <p><a href="https://www.youtube.com/@devspace786" target="_blank" rel="noopener">YouTube @devspace786</a> &middot; <a href="https://www.instagram.com/devspace786" target="_blank" rel="noopener">Instagram @devspace786</a></p>
-  <p style="margin-top:8px">Responses public nahi hain. Suggestions seedha is website se Prashant tak pahunchte hain.</p>
+  <p style="margin-top:8px">Responses are not public. Suggestions go straight from this website to Prashant.</p>
 </footer>
 <script>
 document.querySelectorAll('.plcard').forEach(function(card){
@@ -222,5 +222,6 @@ document.querySelectorAll('.plcard').forEach(function(card){
 </script>
 </body>
 </html>
+
 
 
