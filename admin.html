@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevSpace Creator Dashboard</title>
+<style>
+:root{--bg:#0d0d14;--card:#16161f;--line:#2a2a3a;--txt:#eee;--mut:#9a9ab0;--red:#e84545}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:14px;max-width:760px;margin:0 auto}
+h1{font-size:1.25rem;margin:4px 0 2px}
+.sub{color:var(--mut);font-size:.85rem;margin-bottom:14px}
+nav{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px}
+nav button{background:var(--card);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.85rem;white-space:nowrap;cursor:pointer}
+nav button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.time{color:var(--mut);font-size:.75rem}
+.topic{font-weight:600;margin:4px 0}
+.meta{color:var(--mut);font-size:.8rem}
+.badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.72rem;border:1px solid var(--line)}
+.b-new{color:#7db3ff}.b-shortlisted{color:#ffd166}.b-done{color:#6fdc8c}
+.b-approved-intent{color:#ffd166}.b-idea{color:#7db3ff}.b-in-progress{color:#c792ea}
+.b-planned{color:#7db3ff}.b-filming{color:#ffd166}.b-approved{color:#6fdc8c}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button.act{background:none;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 10px;font-size:.78rem;cursor:pointer}
+button.act:hover{border-color:var(--red)}
+button.big{background:var(--red);color:#fff;border:1px solid var(--red);border-radius:10px;padding:12px 18px;font-size:.95rem;cursor:pointer}
+input,textarea,select{width:100%;background:#0f0f18;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px;font-size:.9rem;margin-bottom:8px;font-family:inherit}
+textarea{min-height:70px;resize:vertical}
+.bar{height:14px;background:#22222f;border-radius:7px;overflow:hidden;margin:6px 0 12px}
+.bar i{display:block;height:100%;background:var(--red)}
+.chartrow{display:flex;justify-content:space-between;font-size:.85rem;margin-top:6px}
+.hide{display:none}
+a.lnk{color:#7db3ff;word-break:break-all}
+.del{color:var(--red)}
+.note{color:var(--mut);font-size:.75rem;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>DevSpace Creator Dashboard</h1>
+<p class="sub">Sirf aapke liye. Suggestions, ideas, plan aur links - sab yahin.</p>
+
+<section id="gate">
+  <div class="card">
+    <h3>Private area - owner sign-in</h3>
+    <p class="note">Google sign-in required. Sirf owner account (devspace786.work) ko access milega.</p>
+    <div class="row">
+      <button class="big" id="signinBtn" onclick="startSignIn()">Sign in with Google</button>
+    </div>
+    <p class="note" id="gateMsg"></p>
+  </div>
+</section>
+
+<div id="app" class="hide">
+<p class="sub">Signed in: <span id="who"></span> &middot; <a class="lnk" href="#" onclick="signOut();return false">Sign out</a></p>
+<nav id="nav">
+  <button data-tab="sugg" class="on">Suggestions</button>
+  <button data-tab="charts">Charts</button>
+  <button data-tab="ideas">My Ideas</button>
+  <button data-tab="plan">10-Day Plan</button>
+  <button data-tab="links">Links</button>
+</nav>
+
+<section id="sugg">
+  <p class="sub" id="suggCount"></p>
+  <div id="suggList"></div>
+</section>
+
+<section id="charts" class="hide">
+  <div class="card"><h3>Category-wise suggestions</h3><div id="chartCat"></div></div>
+  <div class="card"><h3>Din-wise (last 14 days)</h3><div id="chartDay"></div></div>
+</section>
+
+<section id="ideas" class="hide">
+  <div class="card">
+    <h3>Naya idea</h3>
+    <input id="iTitle" placeholder="Idea title">
+    <textarea id="iDetails" placeholder="Details / script points"></textarea>
+    <button class="act" onclick="addIdea()">Save idea</button>
+  </div>
+  <div id="ideaList"></div>
+</section>
+
+<section id="plan" class="hide">
+  <div class="card"><h3>Agle 10 din ka plan</h3><div id="planRows"></div>
+    <button class="act" onclick="addPlanRow()">+ Add day</button>
+    <button class="act" onclick="savePlan()">Save plan</button>
+    <p class="note" id="planMsg"></p></div>
+</section>
+
+<section id="links" class="hide">
+  <div class="card"><h3>Video / Drive links</h3><div id="linkRows"></div>
+    <button class="act" onclick="addLinkRow()">+ Add link</button>
+    <button class="act" onclick="saveLinks()">Save links</button>
+    <p class="note" id="linkMsg"></p></div>
+</section>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer onload="gsiReady()"></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<script>
+/* ================= CONFIG =================
+   CLIENT_ID / API_KEY are public identifiers (not secrets). They are filled in
+   after the OAuth client + API key exist in the dedicated Cloud project.
+   CLIENT_ID: OAuth 2.0 Web client, Authorized JavaScript origin = this site's origin.
+   API_KEY: referrer-restricted to this site, used only for the Google Picker. */
+var CONFIG = {
+  CLIENT_ID: 'PENDING_CLIENT_ID',
+  API_KEY: 'PENDING_API_KEY',
+  DEFAULT_SHEET_ID: '1hPs7dQRQyHXDqD3e1Kh5NJdPX-ZH87eksqO0gRgJvrY',
+  SCOPES: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email'
+};
+var TAB_SUGGEST = 'Form responses 1';
+var TAB_IDEAS = 'Ideas';
+var TAB_PLAN = 'Plan';
+var TAB_LINKS = 'Links';
+var PLAN_STATUS_LIST = ['planned','approved','filming','done'];
+var PLAN_COLS = 12;
+
+var SUGG=[], IDEAS=[], PLAN=[], LINKS=[];
+var tokenClient=null, accessToken=null, ownerEmail='', sheetId=null, gsiLoaded=false;
+
+function gateMsg(m){ document.getElementById('gateMsg').textContent=m||''; }
+function gsiReady(){ gsiLoaded=true; }
+
+function sheetId_(){ return sheetId || localStorage.getItem('ds_sheet_id') || CONFIG.DEFAULT_SHEET_ID; }
+
+function startSignIn(){
+  if(!gsiLoaded || typeof google==='undefined' || !google.accounts){ gateMsg('Google sign-in library abhi load ho rahi hai - ek second mein dobara dabao.'); return; }
+  if(CONFIG.CLIENT_ID.indexOf('PENDING')===0){ gateMsg('Setup pending: OAuth client abhi configure nahi hua. (Preview mode)'); return; }
+  if(!tokenClient){
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CONFIG.CLIENT_ID,
+      scope: CONFIG.SCOPES,
+      callback: function(resp){
+        if(tokenClient._cb){ var cb=tokenClient._cb; tokenClient._cb=null; cb(resp); return; }
+        if(resp.error){ gateMsg('Sign-in cancel/error: '+resp.error); return; }
+        accessToken = resp.access_token;
+        afterSignIn();
+      }
+    });
+  }
+  tokenClient.requestAccessToken({prompt: accessToken ? '' : 'consent'});
+}
+
+
+function requestToken_(prompt){
+  return new Promise(function(res,rej){
+    tokenClient._cb = function(resp){
+      if(resp.error){ rej(new Error(resp.error)); return; }
+      accessToken = resp.access_token; res();
+    };
+    tokenClient.requestAccessToken({prompt:prompt});
+  });
+}
+
+function afterSignIn(){
+  api_( 'https://www.googleapis.com/oauth2/v3/userinfo' ).then(function(u){
+    ownerEmail = (u.email||'').toLowerCase();
+    document.getElementById('who').textContent = ownerEmail || '(email unavailable)';
+    return loadAll();
+  }).then(function(){
+    document.getElementById('gate').classList.add('hide');
+    document.getElementById('app').classList.remove('hide');
+  }).catch(function(e){
+    if(e && e.status===403){ showPickerStep(); return; }
+    gateMsg('Error: ' + (e && e.message ? e.message : e));
+  });
+}
+
+function showPickerStep(){
+  gateMsg('');
+  var g = document.getElementById('gate');
+  g.classList.remove('hide');
+  var card = g.querySelector('.card');
+  card.querySelector('h3').textContent = 'Ek baar: dashboard Sheet select karo';
+  card.querySelector('.note').textContent = 'Google Picker khulega - apni dashboard wali Sheet ek baar select karo. Sirf usi file ka access milega.';
+  var btn = document.getElementById('signinBtn');
+  btn.textContent = 'Select dashboard Sheet';
+  btn.onclick = openPicker;
+}
+
+function openPicker(){
+  gateMsg('Picker load ho raha hai...');
+  gapi.load('picker', function(){
+    var view = new google.picker.DocsView(google.picker.ViewId.SPREADSHEETS).setIncludeFolders(false);
+    var picker = new google.picker.PickerBuilder()
+      .setOAuthToken(accessToken)
+      .setDeveloperKey(CONFIG.API_KEY)
+      .addView(view)
+      .setTitle('Dashboard Sheet select karo')
+      .setCallback(function(data){
+        if(data.action===google.picker.Action.PICKED){
+          sheetId = data.docs[0].id;
+          localStorage.setItem('ds_sheet_id', sheetId);
+          location.reload();
+        }
+        if(data.action===google.picker.Action.CANCEL){ gateMsg('Picker band kar diya - Sheet select kiye bina dashboard nahi khulega.'); }
+      })
+      .build();
+    picker.setVisible(true);
+    gateMsg('');
+  });
+}
+
+function signOut(){
+  if(accessToken && typeof google!=='undefined' && google.accounts){
+    google.accounts.oauth2.revoke(accessToken, function(){});
+  }
+  accessToken=null; localStorage.removeItem('ds_sheet_id'); location.reload();
+}
+
+/* ---------- Sheets API data layer (replaces google.script.run) ---------- */
+function api_(url, opts, retried){
+  opts = opts || {};
+  opts.headers = opts.headers || {};
+  opts.headers['Authorization'] = 'Bearer ' + accessToken;
+  if(opts.body){ opts.headers['Content-Type']='application/json'; }
+  return fetch(url, opts).then(function(r){
+    if(r.status===401 && !retried){
+      return requestToken_('').then(function(){ return api_(url, opts, true); });
+    }
+    if(!r.ok){ return r.text().then(function(t){ var e=new Error('API '+r.status); e.status=r.status; e.body=t; throw e; }); }
+    return r.json();
+  });
+}
+function valuesUrl(range){ return 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetId_()+'/values/'+encodeURIComponent(range); }
+
+function mapRows_(vals){
+  if(!vals || vals.length<2) return [];
+  var head=vals[0], out=[];
+  for(var i=1;i<vals.length;i++){
+    if(!vals[i][0]) continue;
+    var o={row:i+1};
+    o[String(head[0]).toLowerCase()]=String(vals[i][0]);
+    for(var c=1;c<head.length;c++){ o[String(head[c]).toLowerCase()]=String(vals[i][c]||''); }
+    out.push(o);
+  }
+  return out;
+}
+function readTab_(tab){
+  return api_(valuesUrl("'"+tab+"'!A1:Z200")).then(function(d){ return mapRows_(d.values); });
+}
+function writeRange_(range, rows){
+  return api_(valuesUrl(range)+'?valueInputOption=RAW', {method:'PUT', body: JSON.stringify({range:range, majorDimension:'ROWS', values:rows})});
+}
+function appendRows_(range, rows){
+  return api_(valuesUrl(range)+':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS', {method:'POST', body: JSON.stringify({range:range, majorDimension:'ROWS', values:rows})});
+}
+function batchWrite_(data){
+  return api_('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId_()+'/values:batchUpdate',
+    {method:'POST', body: JSON.stringify({valueInputOption:'RAW', data:data})});
+}
+function nowStr_(){
+  var d=new Date(), p=function(n){return (n<10?'0':'')+n};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function revisionOf_(title, playlist){
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(title)+'\n'+String(playlist)))
+    .then(function(buf){
+      var hex=''; new Uint8Array(buf).forEach(function(b){ hex += ('0'+b.toString(16)).slice(-2); });
+      return hex.slice(0,16);
+    });
+}
+function decoratePlan_(rows){
+  return Promise.all(rows.map(function(r){
+    if(r.revision && r.approvedby){
+      return revisionOf_(r.title, r.playlist).then(function(rev){
+        r.approvedcurrent = (rev===r.revision)?'yes':''; return r;
+      });
+    }
+    r.approvedcurrent=''; return r;
+  }));
+}
+
+function loadAll(){
+  return Promise.all([readTab_(TAB_SUGGEST), readTab_(TAB_IDEAS), readTab_(TAB_PLAN), readTab_(TAB_LINKS)])
+    .then(function(res){
+      SUGG=res[0]; IDEAS=res[1]; LINKS=res[3];
+      return decoratePlan_(res[2]).then(function(p){ PLAN=p; });
+    }).then(function(){
+      renderSugg(); renderCharts(); renderIdeas(); renderPlan(); renderLinks();
+    });
+}
+
+/* ---- tabs ---- */
+document.getElementById('nav').addEventListener('click',function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('nav button').forEach(function(x){x.classList.toggle('on',x===b)});
+  ['sugg','charts','ideas','plan','links'].forEach(function(t){
+    document.getElementById(t).classList.toggle('hide',t!==b.dataset.tab)});
+});
+
+/* ---- suggestions ---- */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function renderSugg(){
+  document.getElementById('suggCount').textContent = SUGG.length + ' suggestions (naye pehle)';
+  document.getElementById('suggList').innerHTML = SUGG.map(function(r){
+    return '<div class="card"><span class="time">'+esc(r.time)+'</span>'+
+      '<div class="topic">'+esc(r.topic||'(no topic)')+'</div>'+
+      '<div class="meta">'+esc(r.name||'anonymous')+' &middot; '+esc(r.category)+
+      ' &middot; <span class="badge b-'+esc(r.status)+'">'+esc(r.status)+'</span></div>'+
+      '<div class="row">'+
+      ['new','shortlisted','done'].map(function(s){
+        return '<button class="act" onclick="setSt('+r.row+',\''+s+'\')">'+s+'</button>'}).join('')+
+      '</div></div>'}).join('');
+}
+function setSt(row,s){
+  writeRange_("'"+TAB_SUGGEST+"'!E"+row, [[s]]).then(function(){
+    SUGG.forEach(function(r){if(r.row===row)r.status=s});renderSugg();renderCharts();
+  }).catch(function(e){ alert('Save nahi hua: '+(e.message||e)); });
+}
+
+/* ---- charts ---- */
+function renderCharts(){
+  var byCat={},byDay={};
+  SUGG.forEach(function(r){
+    byCat[r.category]=(byCat[r.category]||0)+1;
+    var d=(r.time||'').split(',')[0]; if(d) byDay[d]=(byDay[d]||0)+1;
+  });
+  function bars(el,obj){
+    var keys=Object.keys(obj),mx=Math.max.apply(null,keys.map(function(k){return obj[k]}).concat([1]));
+    document.getElementById(el).innerHTML = keys.length? keys.map(function(k){
+      return '<div class="chartrow"><span>'+esc(k)+'</span><span>'+obj[k]+'</span></div>'+
+        '<div class="bar"><i style="width:'+Math.round(obj[k]/mx*100)+'%"></i></div>'}).join('')
+      : '<p class="note">Abhi data nahi.</p>';
+  }
+  bars('chartCat',byCat); bars('chartDay',byDay);
+}
+
+/* ---- ideas ---- */
+function renderIdeas(){
+  document.getElementById('ideaList').innerHTML = IDEAS.map(function(it){
+    return '<div class="card"><div class="topic">'+esc(it.title)+'</div>'+
+      (it.details?'<div class="meta">'+esc(it.details)+'</div>':'')+
+      '<div class="meta">'+esc(it.created)+' &middot; <span class="badge b-'+esc(it.status)+'">'+esc(it.status)+'</span></div>'+
+      '<div class="row">'+
+      '<button class="act" onclick="ideaStatus(\''+it.id+'\',\'approved-intent\')">Approve (intent)</button>'+
+      '<button class="act" onclick="ideaStatus(\''+it.id+'\',\'in-progress\')">In progress</button>'+
+      '<button class="act" onclick="ideaStatus(\''+it.id+'\',\'done\')">Done</button>'+
+      '<button class="act del" onclick="delIdea(\''+it.id+'\',this)">Delete</button></div></div>'}).join('');
+}
+function addIdea(){
+  var t=document.getElementById('iTitle').value,d=document.getElementById('iDetails').value;
+  if(!t.trim())return;
+  var id='i'+Date.now(), now=nowStr_();
+  appendRows_("'"+TAB_IDEAS+"'!A:F", [[id, now, t.slice(0,120), d.slice(0,1000), 'idea', now]]).then(function(){
+    IDEAS.push({id:id,created:'abhi',title:t,details:d,status:'idea'});
+    document.getElementById('iTitle').value='';document.getElementById('iDetails').value='';
+    renderIdeas();
+  }).catch(function(e){ alert('Save nahi hua: '+(e.message||e)); });
+}
+function ideaStatus(id,s){
+  var it=IDEAS.find(function(x){return x.id===id}); if(!it)return;
+  var now=nowStr_();
+  writeRange_("'"+TAB_IDEAS+"'!C"+it.row+":F"+it.row, [[it.title, it.details, s, now]]).then(function(){
+    it.status=s; renderIdeas();
+  }).catch(function(e){ alert('Save nahi hua: '+(e.message||e)); });
+}
+function delIdea(id,btn){
+  if(!btn.dataset.armed){
+    btn.dataset.armed='1'; btn.textContent='Sure?';
+    setTimeout(function(){btn.dataset.armed='';btn.textContent='Delete';},3000);
+    return;
+  }
+  var it=IDEAS.find(function(x){return x.id===id}); if(!it)return;
+  writeRange_("'"+TAB_IDEAS+"'!A"+it.row+":F"+it.row, [['','','','','','']]).then(function(){
+    IDEAS=IDEAS.filter(function(x){return x.id!==id});renderIdeas();
+  }).catch(function(e){ alert('Delete nahi hua: '+(e.message||e)); });
+}
+
+/* ---- plan ---- */
+function renderPlan(){
+  var el=document.getElementById('planRows'); el.innerHTML='';
+  PLAN.forEach(function(r,i){
+    var d=document.createElement('div');d.className='card';
+    var okHtml='';
+    if(r.approvedcurrent){
+      okHtml='<div class="meta">&#10003; OK: '+esc(r.approvedby)+' &middot; '+esc(r.approvedat)+'</div>'+
+        '<input placeholder="Video link (https://...)" value="'+esc(r.videourl||'')+'" data-f="videourl">'+
+        '<input placeholder="Thumbnail link (https://...)" value="'+esc(r.thumburl||'')+'" data-f="thumburl">'+
+        '<input placeholder="Caption link (https://...)" value="'+esc(r.captionurl||'')+'" data-f="captionurl">'+
+        '<button class="act" onclick="saveOutputs('+(i+1)+',this)">Save output links</button>';
+    } else {
+      okHtml='<div class="meta">'+(r.revision?'Topic badla hai - fresh OK chahiye.':'Production ke liye owner OK chahiye.')+'</div>'+
+        '<button class="act" onclick="okPlan('+(i+1)+',this)">OK - approve for production</button>';
+    }
+    d.innerHTML='<div class="meta">Day '+(i+1)+'</div>'+
+      '<input placeholder="Date (yyyy-mm-dd)" value="'+esc(r.date||'')+'" data-f="date">'+
+      '<input placeholder="Video title" value="'+esc(r.title||'')+'" data-f="title">'+
+      '<input placeholder="Playlist" value="'+esc(r.playlist||'')+'" data-f="playlist">'+
+      '<select data-f="status">'+PLAN_STATUS_LIST.map(function(s){
+        return '<option'+(s===r.status?' selected':'')+'>'+s+'</option>'}).join('')+'</select>'+
+      '<input placeholder="Notes" value="'+esc(r.notes||'')+'" data-f="notes">'+
+      okHtml+
+      '<p class="note" data-msg></p>';
+    el.appendChild(d);
+  });
+}
+function addPlanRow(){ if(PLAN.length>=10)return; PLAN.push({date:'',title:'',playlist:'',status:'planned',notes:''}); renderPlan(); }
+
+function collectPlanRows_(){
+  var cards=document.querySelectorAll('#planRows .card'),rows=[];
+  cards.forEach(function(c){var o={};c.querySelectorAll('[data-f]').forEach(function(i){o[i.dataset.f]=i.value});rows.push(o)});
+  return rows;
+}
+function savePlanRowsToSheet_(rows){
+  // preserve approval metadata only when topic unchanged at same revision (v10 semantics)
+  var existing={};
+  PLAN.forEach(function(r){ existing[String(r.day)]=r; });
+  var out=[], i;
+  var chain=Promise.resolve();
+  var prepared=[];
+  rows.forEach(function(row,i){
+    var day=String(i+1);
+    var title=String(row.title||'').slice(0,120), playlist=String(row.playlist||'').slice(0,60);
+    var status=PLAN_STATUS_LIST.indexOf(row.status)!==-1?row.status:'planned';
+    var ex=existing[day];
+    chain=chain.then(function(){
+      return revisionOf_(title,playlist).then(function(rev){
+        var keep=ex && ex.revision && ex.approvedby && ex.revision===rev;
+        if(!keep && status==='approved') status='planned';
+        prepared.push([
+          i+1,
+          String(row.date||'').slice(0,12),
+          title,
+          playlist,
+          status,
+          String(row.notes||'').slice(0,300),
+          keep?ex.revision:'',
+          keep?ex.approvedby:'',
+          keep?(ex.approvedat||''):'',
+          keep?(ex.videourl||''):'',
+          keep?(ex.thumburl||''):'',
+          keep?(ex.captionurl||''):''
+        ]);
+      });
+    });
+  });
+  return chain.then(function(){
+    while(prepared.length<10){
+      prepared.push(['','','','','','','','','','','','']);
+    }
+    return writeRange_("'"+TAB_PLAN+"'!A2:L11", prepared).then(function(){ return rows.length; });
+  });
+}
+function savePlan(next){
+  var rows=collectPlanRows_();
+  if(rows.length>10){ document.getElementById('planMsg').textContent='Plan max 10 days'; return; }
+  savePlanRowsToSheet_(rows).then(function(n){
+    document.getElementById('planMsg').textContent='Plan saved ('+n+' days).';
+    if(next)next();
+  }).catch(function(e){
+    document.getElementById('planMsg').textContent='Error: '+(e.message||e);
+  });
+}
+function okPlan(day,btn){
+  btn.disabled=true;
+  savePlan(function(){
+    // fresh read of the row, then approve at current revision
+    readTab_(TAB_PLAN).then(function(rows){
+      var r=null; rows.forEach(function(x){ if(String(x.day)===String(day)) r=x; });
+      if(!r) throw new Error('plan day not found');
+      if(!r.title) throw new Error('title required - save the plan first');
+      return revisionOf_(r.title, r.playlist).then(function(rev){
+        var now=nowStr_();
+        return batchWrite_([
+          {range:"'"+TAB_PLAN+"'!E"+r.row, values:[['approved']]},
+          {range:"'"+TAB_PLAN+"'!G"+r.row+":I"+r.row, values:[[rev, ownerEmail, now]]}
+        ]);
+      });
+    }).then(function(){
+      return readTab_(TAB_PLAN).then(decoratePlan_).then(function(p){ PLAN=p; renderPlan(); });
+    }).catch(function(e){
+      btn.disabled=false;
+      document.getElementById('planMsg').textContent='Error: '+(e.message||e);
+    });
+  });
+}
+function saveOutputs(day,btn){
+  var c=btn.closest('.card');
+  var v=c.querySelector('[data-f="videourl"]').value;
+  var t=c.querySelector('[data-f="thumburl"]').value;
+  var cap=c.querySelector('[data-f="captionurl"]').value;
+  var msg=c.querySelector('[data-msg]');
+  if(!/^https:\/\//.test(v) || !/^https:\/\//.test(t) || !/^https:\/\//.test(cap)){
+    msg.textContent='Error: https links required for video, thumbnail and caption'; return;
+  }
+  readTab_(TAB_PLAN).then(function(rows){
+    var r=null; rows.forEach(function(x){ if(String(x.day)===String(day)) r=x; });
+    if(!r) throw new Error('plan day not found');
+    return revisionOf_(r.title, r.playlist).then(function(rev){
+      if(!r.revision || !r.approvedby || r.revision!==rev) throw new Error('topic not approved at current revision - owner OK required first');
+      return writeRange_("'"+TAB_PLAN+"'!J"+r.row+":L"+r.row, [[v.slice(0,500), t.slice(0,500), cap.slice(0,500)]]);
+    });
+  }).then(function(){ msg.textContent='Output links saved.'; })
+    .catch(function(e){ msg.textContent='Error: '+(e.message||e); });
+}
+
+/* ---- links ---- */
+function renderLinks(){
+  var el=document.getElementById('linkRows'); el.innerHTML='';
+  LINKS.forEach(function(r){
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<input placeholder="Label" value="'+esc(r.label||'')+'" data-f="label">'+
+      '<input placeholder="https://..." value="'+esc(r.url||'')+'" data-f="url">'+
+      '<select data-f="type">'+['video','drive','other'].map(function(s){
+        return '<option'+(s===r.type?' selected':'')+'>'+s+'</option>'}).join('')+'</select>';
+    el.appendChild(d);
+  });
+}
+function addLinkRow(){ LINKS.push({label:'',url:'',type:'video'}); renderLinks(); }
+function saveLinks(){
+  var cards=document.querySelectorAll('#linkRows .card'),rows=[];
+  cards.forEach(function(c){var o={};c.querySelectorAll('[data-f]').forEach(function(i){o[i.dataset.f]=i.value});if(o.url)rows.push(o)});
+  if(rows.length>200){ document.getElementById('linkMsg').textContent='Error: too many'; return; }
+  var bad=rows.filter(function(r){return !/^https:\/\//.test(r.url)});
+  if(bad.length){ document.getElementById('linkMsg').textContent='Error: https links only'; return; }
+  var today=nowStr_().split(' ')[0];
+  var out=rows.map(function(r){ return [String(r.label||'').slice(0,120), String(r.url).slice(0,500), String(r.type||'').slice(0,30), today]; });
+  while(out.length<200){ out.push(['','','','']); }
+  writeRange_("'"+TAB_LINKS+"'!A2:D201", out).then(function(){
+    document.getElementById('linkMsg').textContent='Links saved ('+rows.length+').';
+  }).catch(function(e){
+    document.getElementById('linkMsg').textContent='Error: '+(e.message||e);
+  });
+}
+</script>
+</body>
+</html>
