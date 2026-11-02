@@ -69,19 +69,80 @@ footer a{color:#ff8095}
   </div>
 </header>
 <div class="wrap">
+<!-- Native suggestion form: replaces the Google Form <iframe> block in index.html.
+     Submits via hidden iframe; the endpoint postMessages the REAL outcome back
+     (fetch/XHR cannot read Apps Script responses - no CORS headers).
+     Set ENDPOINT to the public doPost /exec URL after deployment approval. -->
 <section id="suggest">
   <h2>Kya dekhna chahte ho?</h2>
   <p class="sub">Apna topic ya idea suggest karo - suggestion seedha Prashant tak pahunchta hai.</p>
   <div class="card">
-    <div class="fembed">
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfpoixm1c-HXGuOzl_xB3IhkXip_pTNUdDfMtxdMe_F3WCWMg/viewform?embedded=true" width="100%" height="620" frameborder="0" marginheight="0" marginwidth="0" style="border:1px solid #2a2a3a;border-radius:12px;background:#fff" title="DevSpace suggestion form">Loading...</iframe>
-    </div>
+    <form id="suggestForm" method="POST" action="" target="suggestFrame" style="padding:18px">
+      <input type="hidden" name="ui" value="1">
+      <input type="text" name="website" tabindex="-1" autocomplete="off"
+             style="position:absolute;left:-9999px" aria-hidden="true">
+      <input type="text" name="name" maxlength="80" placeholder="Aapka naam (optional)"
+             style="width:100%;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem">
+      <div id="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+      <input type="text" name="category" id="catField" maxlength="40" placeholder="Ya apni category likho"
+             style="width:100%;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:10px;font-size:.95rem">
+      <textarea name="topic" maxlength="300" required placeholder="Kaunsa topic / idea chahiye?"
+             style="width:100%;min-height:90px;background:#0f0f18;border:1px solid #2a2a3a;color:#eee;border-radius:10px;padding:12px;margin-bottom:12px;font-size:.95rem;resize:vertical"></textarea>
+      <p id="formMsg" style="color:#f4a261;font-size:.82rem;display:none;margin-bottom:8px"></p>
+      <button type="submit" id="sendBtn" class="btn red" style="width:100%;border:0;cursor:pointer;font-size:1rem">Bhejo</button>
+    </form>
+    <iframe name="suggestFrame" style="display:none" title="suggest"></iframe>
     <div class="thanks" id="thanks">
       <h3>Shukriya!</h3>
       <p>Aapka suggestion Prashant tak pahunch gaya. Naya video jaldi!</p>
     </div>
   </div>
 </section>
+<script>
+(function(){
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbweFGMzQbZdk1OsAVbZ3o5gOgT914q87nbQHKIAM2RIzRF2otnTUAmRbprf3SMHECVxRg/exec';
+  var TOPICS = ['Cyber Safe in 30 Seconds','Cyber Safety Explained','Indian Laws Explained',
+    'Indian Constitutional Explained: Rights & Duties','Career After 12th',
+    'Salary Samjho in 30 Seconds','Better Every Day | Personal Growth',
+    'Real Stories, Explained','Apps & Tools That Help','AI/Stuff','Other'];
+  var chips = document.getElementById('chips'), cat = document.getElementById('catField'),
+      form = document.getElementById('suggestForm'), msg = document.getElementById('formMsg');
+  TOPICS.forEach(function(t){
+    var b = document.createElement('button'); b.type='button'; b.textContent=t;
+    b.style.cssText='background:#16161f;border:1px solid #2a2a3a;color:#9a9ab0;border-radius:999px;padding:7px 13px;font-size:.8rem;cursor:pointer';
+    b.onclick=function(){
+      chips.querySelectorAll('button').forEach(function(x){x.style.borderColor='#2a2a3a';x.style.color='#9a9ab0'});
+      b.style.borderColor='#e84545'; b.style.color='#fff';
+      cat.value = (t==='Other') ? '' : t;
+      if(t==='Other') cat.focus();
+    };
+    chips.appendChild(b);
+  });
+  window.addEventListener('message', function(ev){
+    if(typeof ev.data !== 'string' || ev.data.indexOf('devspace-suggest:') !== 0) return;
+    if(ev.data === 'devspace-suggest:ok'){
+      form.style.display='none';
+      document.getElementById('thanks').style.display='block';
+    } else {
+      msg.textContent = 'Server thoda busy hai. 1 minute baad dobara bhejo - aapka text yahin hai.';
+      msg.style.display = 'block';
+      document.getElementById('sendBtn').disabled = false;
+    }
+  });
+  form.action = ENDPOINT;
+  form.addEventListener('submit', function(ev){
+    if(!form.topic.value.trim() || !cat.value.trim()){
+      ev.preventDefault();
+      msg.textContent = 'Category choose karo aur topic likho.';
+      msg.style.display = 'block';
+      return;
+    }
+    msg.style.display = 'none';
+    document.getElementById('sendBtn').disabled = true;
+  });
+})();
+</script>
+
 <section id="videos">
   <h2>Playlists</h2>
   <p class="sub">65+ videos, topic-wise. Playlist kholo aur yahin dekho.</p>
@@ -131,7 +192,7 @@ footer a{color:#ff8095}
 </div>
 <footer>
   <p><a href="https://www.youtube.com/@devspace786" target="_blank" rel="noopener">YouTube @devspace786</a> &middot; <a href="https://www.instagram.com/devspace786" target="_blank" rel="noopener">Instagram @devspace786</a></p>
-  <p style="margin-top:8px">Responses public nahi hain. Suggestions Google Forms ke zariye Prashant tak pahunchte hain.</p>
+  <p style="margin-top:8px">Responses public nahi hain. Suggestions seedha is website se Prashant tak pahunchte hain.</p>
 </footer>
 <script>
 document.querySelectorAll('.plcard').forEach(function(card){
@@ -145,3 +206,4 @@ document.querySelectorAll('.plcard').forEach(function(card){
 </script>
 </body>
 </html>
+
