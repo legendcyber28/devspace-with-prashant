@@ -119,7 +119,7 @@ footer a{color:#ff8095}
     chips.appendChild(b);
   });
   window.addEventListener('message', function(ev){
-    if(ev.origin !== 'https://script.googleusercontent.com') return;
+    if(!(ev.origin === 'https://script.googleusercontent.com' || /\.googleusercontent\.com$/.test(ev.origin))) return;
     var frame = document.querySelector('iframe[name=suggestFrame]');
     if(!frame || ev.source !== frame.contentWindow) return;
     if(typeof ev.data !== 'string' || ev.data.indexOf('devspace-suggest:') !== 0) return;
