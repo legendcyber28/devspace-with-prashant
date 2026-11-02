@@ -118,15 +118,17 @@ footer a{color:#ff8095}
     };
     chips.appendChild(b);
   });
-  var suggestPending = false;
+  var suggestNonce = null;
   window.addEventListener('message', function(ev){
     // origin allowlist (Google nests the response one iframe deep, so a strict
-    // ev.source === suggestFrame.contentWindow check fails) + pending correlation
+    // ev.source === suggestFrame.contentWindow check fails) + per-submit nonce
     if(!(ev.origin === 'https://script.googleusercontent.com' || /(^|\.)googleusercontent\.com$/.test(ev.origin))) return;
     if(typeof ev.data !== 'string' || ev.data.indexOf('devspace-suggest:') !== 0) return;
-    if(!suggestPending) return;
-    suggestPending = false;
-    if(ev.data === 'devspace-suggest:ok'){
+    if(!suggestNonce) return;                                  // no pending submission
+    var parts = ev.data.split(':');
+    if(parts.length !== 3 || parts[2] !== suggestNonce) return; // must echo our nonce
+    suggestNonce = null;
+    if(parts[1] === 'ok'){
       form.style.display='none';
       document.getElementById('thanks').style.display='block';
     } else {
@@ -136,10 +138,13 @@ footer a{color:#ff8095}
     }
   });
   form.action = ENDPOINT;
+  var nonceField = document.createElement('input');
+  nonceField.type = 'hidden'; nonceField.name = 'nonce'; form.appendChild(nonceField);
   form.addEventListener('submit', function(ev){
-    suggestPending = true;
+    suggestNonce = String(Date.now()) + '-' + Math.random().toString(36).slice(2, 12);
+    nonceField.value = suggestNonce;
     if(!form.topic.value.trim() || !cat.value.trim()){
-      suggestPending = false;
+      suggestNonce = null;
       ev.preventDefault();
       msg.textContent = 'Category choose karo aur topic likho.';
       msg.style.display = 'block';
