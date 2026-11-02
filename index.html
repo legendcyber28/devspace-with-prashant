@@ -118,11 +118,14 @@ footer a{color:#ff8095}
     };
     chips.appendChild(b);
   });
+  var suggestPending = false;
   window.addEventListener('message', function(ev){
-    if(!(ev.origin === 'https://script.googleusercontent.com' || /\.googleusercontent\.com$/.test(ev.origin))) return;
-    var frame = document.querySelector('iframe[name=suggestFrame]');
-    if(!frame || ev.source !== frame.contentWindow) return;
+    // origin allowlist (Google nests the response one iframe deep, so a strict
+    // ev.source === suggestFrame.contentWindow check fails) + pending correlation
+    if(!(ev.origin === 'https://script.googleusercontent.com' || /(^|\.)googleusercontent\.com$/.test(ev.origin))) return;
     if(typeof ev.data !== 'string' || ev.data.indexOf('devspace-suggest:') !== 0) return;
+    if(!suggestPending) return;
+    suggestPending = false;
     if(ev.data === 'devspace-suggest:ok'){
       form.style.display='none';
       document.getElementById('thanks').style.display='block';
@@ -134,7 +137,9 @@ footer a{color:#ff8095}
   });
   form.action = ENDPOINT;
   form.addEventListener('submit', function(ev){
+    suggestPending = true;
     if(!form.topic.value.trim() || !cat.value.trim()){
+      suggestPending = false;
       ev.preventDefault();
       msg.textContent = 'Category choose karo aur topic likho.';
       msg.style.display = 'block';
