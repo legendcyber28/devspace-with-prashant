@@ -163,7 +163,7 @@ function afterSignIn(){
     document.getElementById('gate').classList.add('hide');
     document.getElementById('app').classList.remove('hide');
   }).catch(function(e){
-    if(e && e.status===403){ showPickerStep(); return; }
+    if(e && e.status===403){ localStorage.removeItem('ds_sheet_id'); showPickerStep(); return; }
     gateMsg('Error: ' + (e && e.message ? e.message : e));
   });
 }
@@ -191,7 +191,12 @@ function openPicker(){
       .setTitle('Dashboard Sheet select karo')
       .setCallback(function(data){
         if(data.action===google.picker.Action.PICKED){
-          sheetId = data.docs[0].id;
+          var picked = data.docs[0].id;
+          if(picked !== CONFIG.DEFAULT_SHEET_ID){
+            gateMsg('Ye wali Sheet nahi hai - dashboard wali Sheet select karo (naam se pehchano). Kuch save nahi hua.');
+            return;
+          }
+          sheetId = picked;
           localStorage.setItem('ds_sheet_id', sheetId);
           location.reload();
         }
@@ -406,42 +411,43 @@ function collectPlanRows_(){
 }
 function savePlanRowsToSheet_(rows){
   // preserve approval metadata only when topic unchanged at same revision (v10 semantics)
-  var existing={};
-  PLAN.forEach(function(r){ existing[String(r.day)]=r; });
-  var out=[], i;
-  var chain=Promise.resolve();
-  var prepared=[];
-  rows.forEach(function(row,i){
-    var day=String(i+1);
-    var title=String(row.title||'').slice(0,120), playlist=String(row.playlist||'').slice(0,60);
-    var status=PLAN_STATUS_LIST.indexOf(row.status)!==-1?row.status:'planned';
-    var ex=existing[day];
-    chain=chain.then(function(){
-      return revisionOf_(title,playlist).then(function(rev){
-        var keep=ex && ex.revision && ex.approvedby && ex.revision===rev;
-        if(!keep && status==='approved') status='planned';
-        prepared.push([
-          i+1,
-          String(row.date||'').slice(0,12),
-          title,
-          playlist,
-          status,
-          String(row.notes||'').slice(0,300),
-          keep?ex.revision:'',
-          keep?ex.approvedby:'',
-          keep?(ex.approvedat||''):'',
-          keep?(ex.videourl||''):'',
-          keep?(ex.thumburl||''):'',
-          keep?(ex.captionurl||''):''
-        ]);
+  // existing-state read is FRESH (not the cached PLAN) so concurrent edits are respected
+  return readTab_(TAB_PLAN).then(function(fresh){
+    var existing={};
+    fresh.forEach(function(r){ existing[String(r.day)]=r; });
+    var prepared=[], chain=Promise.resolve();
+    rows.forEach(function(row,i){
+      var day=String(i+1);
+      var title=String(row.title||'').slice(0,120), playlist=String(row.playlist||'').slice(0,60);
+      var status=PLAN_STATUS_LIST.indexOf(row.status)!==-1?row.status:'planned';
+      var ex=existing[day];
+      chain=chain.then(function(){
+        return revisionOf_(title,playlist).then(function(rev){
+          var keep=ex && ex.revision && ex.approvedby && ex.revision===rev;
+          if(!keep && status==='approved') status='planned';
+          prepared.push([
+            i+1,
+            String(row.date||'').slice(0,12),
+            title,
+            playlist,
+            status,
+            String(row.notes||'').slice(0,300),
+            keep?ex.revision:'',
+            keep?ex.approvedby:'',
+            keep?(ex.approvedat||''):'',
+            keep?(ex.videourl||''):'',
+            keep?(ex.thumburl||''):'',
+            keep?(ex.captionurl||''):''
+          ]);
+        });
       });
     });
-  });
-  return chain.then(function(){
-    while(prepared.length<10){
-      prepared.push(['','','','','','','','','','','','']);
-    }
-    return writeRange_("'"+TAB_PLAN+"'!A2:L11", prepared).then(function(){ return rows.length; });
+    return chain.then(function(){
+      while(prepared.length<10){
+        prepared.push(['','','','','','','','','','','','']);
+      }
+      return writeRange_("'"+TAB_PLAN+"'!A2:L11", prepared).then(function(){ return rows.length; });
+    });
   });
 }
 function savePlan(next){
