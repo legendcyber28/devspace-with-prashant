@@ -319,7 +319,7 @@ function renderSugg(){
       '</div></div>'}).join('');
 }
 function setSt(row,s){
-  writeRange_("'"+TAB_SUGGEST+"'!F"+row, [[s]]).then(function(){
+  writeRange_("'"+TAB_SUGGEST+"'!E"+row, [[s]]).then(function(){
     SUGG.forEach(function(r){if(r.row===row)r.status=s});renderSugg();renderCharts();
   }).catch(function(e){ alert('Save nahi hua: '+(e.message||e)); });
 }
