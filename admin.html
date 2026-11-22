@@ -163,7 +163,7 @@ function afterSignIn(){
     document.getElementById('gate').classList.add('hide');
     document.getElementById('app').classList.remove('hide');
   }).catch(function(e){
-    if(e && e.status===403){ localStorage.removeItem('ds_sheet_id'); showPickerStep(); return; }
+    if(e && (e.status===403 || e.status===404)){ localStorage.removeItem('ds_sheet_id'); showPickerStep(); return; }
     gateMsg('Error: ' + (e && e.message ? e.message : e));
   });
 }
@@ -187,6 +187,7 @@ function openPicker(){
     var picker = new google.picker.PickerBuilder()
       .setOAuthToken(accessToken)
       .setDeveloperKey(CONFIG.API_KEY)
+      .setAppId('122758599789')
       .addView(view)
       .setTitle('Dashboard Sheet select karo')
       .setCallback(function(data){
@@ -534,4 +535,3 @@ function saveLinks(){
 </script>
 </body>
 </html>
-
