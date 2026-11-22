@@ -199,7 +199,7 @@ function openPicker(){
           }
           sheetId = picked;
           localStorage.setItem('ds_sheet_id', sheetId);
-          location.reload();
+          afterSignIn();
         }
         if(data.action===google.picker.Action.CANCEL){ gateMsg('Picker band kar diya - Sheet select kiye bina dashboard nahi khulega.'); }
       })
@@ -282,7 +282,14 @@ function decoratePlan_(rows){
 function loadAll(){
   return Promise.all([readTab_(TAB_SUGGEST), readTab_(TAB_IDEAS), readTab_(TAB_PLAN), readTab_(TAB_LINKS)])
     .then(function(res){
-      SUGG=res[0]; IDEAS=res[1]; LINKS=res[3];
+      SUGG=res[0].map(function(r){
+        r.time = r.timestamp || r.time || '';
+        r.name = r['aapka naam (optional)'] || r.name || '';
+        r.category = r['kaunsi category ka content chahiye?'] || r.category || '';
+        r.topic = r['kaunsa topic / idea chahiye? thoda detail mein likho'] || r.topic || '';
+        r.status = r.status || 'new';
+        return r;
+      }).reverse(); IDEAS=res[1]; LINKS=res[3];
       return decoratePlan_(res[2]).then(function(p){ PLAN=p; });
     }).then(function(){
       renderSugg(); renderCharts(); renderIdeas(); renderPlan(); renderLinks();
@@ -312,7 +319,7 @@ function renderSugg(){
       '</div></div>'}).join('');
 }
 function setSt(row,s){
-  writeRange_("'"+TAB_SUGGEST+"'!E"+row, [[s]]).then(function(){
+  writeRange_("'"+TAB_SUGGEST+"'!F"+row, [[s]]).then(function(){
     SUGG.forEach(function(r){if(r.row===row)r.status=s});renderSugg();renderCharts();
   }).catch(function(e){ alert('Save nahi hua: '+(e.message||e)); });
 }
